@@ -11,14 +11,14 @@ services:
       file: mdb_base.yaml
       service: mongodb_replset_1
     ports:
-      - 27001:27000
-      - 27027:27027
+      - 27027:27017
     volumes:
       - /mnt/data/rs1:/data
     hostname: rs1a
     container_name: rs1a
     labels:
       - "initialstate=primary"
+    command: mongod --dbpath /data/ --logpath /data/mongod_27027.log --logappend --replSet replset_1 --wiredTigerCacheSizeGB 3
 
 
   rs1b:
@@ -26,29 +26,28 @@ services:
       file: mdb_base.yaml
       service: mongodb_replset_1
     ports:
-      - 27002:27000
-      - 27028:27028
+      - 27028:27017
     volumes:
       - /mnt/data/rs1:/data
     hostname: rs1b
     container_name: rs1b
     labels:
       - "initialstate=secondary"
-
+    command: mongod --dbpath /data/ --logpath /data/mongod_27028.log --logappend --replSet replset_1 --wiredTigerCacheSizeGB 3
 
   rs1c:
     extends:
       file: mdb_base.yaml
       service: mongodb_replset_1
     ports:
-      - 27003:27000
-      - 27029:27029
+      - 27029:27017
     volumes:
       - /mnt/data/rs1:/data
     hostname: rs1c
     container_name: rs1c
     labels:
       - "initialstate=secondary"
+    command: mongod --dbpath /data/ --logpath /data/mongod_27029.log --logappend --replSet replset_1 --wiredTigerCacheSizeGB 3
 
   ################
   #SECOND SHARD
@@ -59,42 +58,42 @@ services:
       file: mdb_base.yaml
       service: mongodb_replset_2
     ports:
-      - 27011:27000
-      - 27037:27037
+      - 27037:27017
     volumes:
       - /mnt/data/rs2:/data
     hostname: rs2a
     container_name: rs2a
     labels:
       - "initialstate=primary"
+    command: mongod --dbpath /data/ --logpath /data/mongod_27037.log --logappend --replSet replset_2 --wiredTigerCacheSizeGB 3
 
   rs2b:
     extends:
       file: mdb_base.yaml
       service: mongodb_replset_2
     ports:
-      - 27012:27000
-      - 27038:27038
+      - 27038:27017
     volumes:
       - /mnt/data/rs2:/data
     hostname: rs2b
     container_name: rs2b
     labels:
       - "initialstate=secondary"
+    command: mongod --dbpath /data/ --logpath /data/mongod_27038.log --logappend --replSet replset_2 --wiredTigerCacheSizeGB 3
 
   rs2c:
     extends:
       file: mdb_base.yaml
       service: mongodb_replset_2
     ports:
-      - 27013:27000
-      - 27039:27039
+      - 27039:27017
     volumes:
       - /mnt/data/rs2:/data
     hostname: rs2c
     container_name: rs2c
     labels:
       - "initialstate=secondary"
+    command: mongod --dbpath /data/ --logpath /data/mongod_27039.log --logappend --replSet replset_2 --wiredTigerCacheSizeGB 3
 
     ################
     #THIRD SHARD
@@ -106,43 +105,41 @@ services:
       file: mdb_base.yaml
       service: mongodb_replset_3
     ports:
-      - 27021:27000
-      - 27047:27047
+      - 27047:27017
     volumes:
       - /mnt/data/rs3:/data
     hostname: rs3a
     container_name: rs3a
     labels:
       - "initialstate=primary"
+    command: mongod --dbpath /data/ --logpath /data/mongod_27047.log --logappend --replSet replset_3 --wiredTigerCacheSizeGB 3
 
   rs3b:
     extends:
       file: mdb_base.yaml
       service: mongodb_replset_3
     ports:
-      - 27022:27000
-      - 27048:27048
+      - 27048:27017
     volumes:
       - /mnt/data/rs3:/data
     hostname: rs3b
     container_name: rs3b
     labels:
       - "initialstate=secondary"
-
+    command: mongod --dbpath /data/ --logpath /data/mongod_27048.log --logappend --replSet replset_3 --wiredTigerCacheSizeGB 3
   rs3c:
     extends:
       file: mdb_base.yaml
       service: mongodb_replset_3
     ports:
-      - 27023:27000
-      - 27049:27049
+      - 27049:27017
     volumes:
       - /mnt/data/rs3:/data
     hostname: rs3c
     container_name: rs3c
     labels:
       - "initialstate=secondary"
-
+    command: mongod --dbpath /data/ --logpath /data/mongod_27049.log --logappend --replSet replset_3 --wiredTigerCacheSizeGB 3
   ################
   #CFG SVR
   ################
@@ -152,36 +149,36 @@ services:
       file: mdb_base.yaml
       service: mongodb_cfg
     ports:
-      - 27030:27000
-      - 27057:27057
+      - 27057:27017
     volumes:
       - /mnt/data/cfg:/data
     hostname: cfgsvr-a
     container_name: cfgsvr-a
+    command: mongod --port 27017 --dbpath /data/ --logpath /data/mongod_27057.log --logappend --configsvr --replSet replset_cfgsvr --wiredTigerCacheSizeGB 3
 
   cfgsvr-b:
     extends:
       file: mdb_base.yaml
       service: mongodb_cfg
     ports:
-      - 27031:27000
-      - 27058:27058
+      - 27058:27017
     volumes:
       - /mnt/data/cfg:/data
     hostname: cfgsvr-b
     container_name: cfgsvr-b
+    command: mongod --port 27017 --dbpath /data/ --logpath /data/mongod_27058.log --logappend --configsvr --replSet replset_cfgsvr --wiredTigerCacheSizeGB 3
 
   cfgsvr-c:
     extends:
       file: mdb_base.yaml
       service: mongodb_cfg
     ports:
-      - 27032:27000
-      - 27059:27059
+      - 27059:27017
     volumes:
       - /mnt/data/cfg:/data
     hostname: cfgsvr-c
     container_name: cfgsvr-c
+    command: mongod --port 27017 --dbpath /data/ --logpath /data/mongod_27059.log --logappend --configsvr --replSet replset_cfgsvr --wiredTigerCacheSizeGB 3
 
   ################
   #mongos
@@ -192,9 +189,9 @@ services:
       file: mdb_base.yaml
       service: mongodb_mongos
     ports:
-      - 27000:27000
       - 27017:27017
     volumes:
       - /mnt/data/mongos:/data
     hostname: mongos
     container_name: mongos
+    command: mongos --logpath /data/mongod_27017.log --logappend --configdb replset_cfgsvr/cfgsvr-a:27017,cfgsvr-b:27017,cfgsvr-c:27017

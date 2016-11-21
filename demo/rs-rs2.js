@@ -1,0 +1,5 @@
+rs.initiate()
+rs.add("rs2b:27017")
+rs.add("rs2c:27017")
+rs.conf()
+rs.status()

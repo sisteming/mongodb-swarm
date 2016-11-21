@@ -1,0 +1,67 @@
+FROM ubuntu
+MAINTAINER Marco Bonezzi "marco.bonezzi@10gen.com"
+
+#PARAMETERS
+# DATA VOLUME = /data/db
+# configuration = mongod_wt.conf (can be built outside)
+# PORT (EXPOSE) 
+
+#CREATE GROUP AND USER FOR MONGODB
+# add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
+RUN groupadd -r mongodb && useradd -r -g mongodb mongodb
+
+#UPDATE PACKAGES AND INSTALL NUMACTL
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		ca-certificates curl \
+		numactl \
+		gosu \
+        wget \
+        libcurl3 libpci3 libsensors4 libsnmp30 libwrap0 snmp \
+	&& rm -rf /var/lib/apt/lists/*
+
+# CONFIGURATION STEPS TO INSTALL GOSU
+# grab gosu for easy step-down from root
+
+# SETTING MONGODB VERSION TO WORK WITH
+ENV MONGO_MAJOR 3.4
+ENV MONGO_VERSION 3.4.0-rc3
+
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+
+RUN mkdir /tmp/mongodb
+RUN cd /tmp/mongodb
+WORKDIR /tmp/mongodb
+RUN wget https://repo.mongodb.com/apt/ubuntu/dists/xenial/mongodb-enterprise/testing/multiverse/binary-amd64/mongodb-enterprise-server_3.4.0~rc3_amd64.deb
+RUN wget https://repo.mongodb.com/apt/ubuntu/dists/xenial/mongodb-enterprise/testing/multiverse/binary-amd64/mongodb-enterprise-mongos_3.4.0~rc3_amd64.deb
+RUN wget https://repo.mongodb.com/apt/ubuntu/dists/xenial/mongodb-enterprise/testing/multiverse/binary-amd64/mongodb-enterprise-tools_3.4.0~rc3_amd64.deb
+RUN wget https://repo.mongodb.com/apt/ubuntu/dists/xenial/mongodb-enterprise/testing/multiverse/binary-amd64/mongodb-enterprise-shell_3.4.0~rc3_amd64.deb
+
+# UPDATE REPOS AND INSTALL MONGODB WITH DEFINED VERSION
+#RUN set -x \
+#	&& apt-get update 
+	
+RUN dpkg -i /tmp/mongodb/mongodb-*.deb	
+
+RUN	mv /etc/mongod.conf /etc/mongod.conf.orig
+
+# DATA DIRECTORY SETUP
+RUN mkdir -p /data/db && chown -R mongodb:mongodb /data/db
+
+# WE DON'T NEED TO DEFINE THE VOLUME HERE if mounted from HOST
+
+# SETTING ENTRYPOINT
+COPY docker-entrypoint.sh /entrypoint.sh
+COPY mongod_wt.conf /etc/mongod.conf
+RUN chown -R mongodb:mongodb /etc/mongod.conf
+
+
+# DEFINE ENTRYPOINT
+ENTRYPOINT ["/entrypoint.sh"]
+
+# PORT TO BE EXPOSED (inside container, different on host) 
+EXPOSE 27017
+EXPOSE 27019
+# COMMAND TO RUN WHEN RUNNING THE CONTAINER
+CMD ["-f", "/etc/mongod.conf"]
+

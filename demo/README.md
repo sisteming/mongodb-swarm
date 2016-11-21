@@ -1,8 +1,7 @@
-MongoDB World Demo (mongo-swarm)
+MongoDB sharded cluster on Docker containers: Demo
 ===========
 
-Below there is a brief description of each compose files used and how to use the Python automation scripts to deploy our cluster into Cloud Manager using its API.
-
+Below there is a brief description of each compose file used to deploy a native MongoDB sharded cluster in Docker containers
 ===========
 
 Compose files
@@ -15,14 +14,9 @@ This is the base and starting file where we define the service for each shard (a
 
 This file contains the following definitions:
 
-**image**: Docker image for the Cloud Manager automation agent from the Docker HUB 
+**image**: Docker image for mongod process with the 3.4.0-rc3 release.
 
-		image: marcob/mongodb-automation:latest
-
-**security_opt**: Security options to run this service (the Cloud Manager automation requires to be run with seccomp:unconfined so that it can execute all required system calls)
-
-		security_opt:
-      		- seccomp:unconfined
+		image: marcob/mongodb-3.4.0-rc3
 
 **labels**: Labels added to each container for this service. These will be used to map the role of each container (mongod, cfgsvr, mongos) and the replica set it belongs to
 
@@ -30,11 +24,6 @@ This file contains the following definitions:
       		- "role=mongod"
       		- "replset=rs1"
 
-**command**: Command to be run by the container, in this case, the automation agent for Cloud Manager. Details required:
-	    	- Cloud Manager group ID
-	    	- Cloud Manager api Key
-
-	   command: --mmsBaseUrl=https://cloud.mongodb.com --mmsGroupId=XXXX --mmsApiKey=XXXXX
 	
 **`mdb_repl.yaml`**
 
@@ -44,11 +33,10 @@ This file extends *mdb_base.yaml* and expands each service previously defined in
 
 This file contains the following definitions:
 
-**ports**: ports mapping HOST:CONTAINER for the automation agent and the mongod process. The ports on the host should be all different to avoid multiple containers trying to map on the same port on a single host.
+**ports**: ports mapping HOST:CONTAINER for the mongod process. The ports on the host should be all different to avoid multiple containers trying to map on the same port on a single host.
 
     ports:
-      - 27001:27000
-      - 27027:27027
+      - 27027:27017
 
  **volumes**: Data volume mapping HOST:container. Each container will use the /data/ directory for its mongod process. This directory will then be mounted on the host as the /mnt/data/rs1. The mount directory on the host should ideally:
  
@@ -72,6 +60,12 @@ This allow us for instance to access the datafiles for normal operations or just
 
     labels:
       - "initialstate=primary"
+
+
+**command**: Command to be run by the container to start the mongod process inside the container
+
+	   command: mongod --dbpath /data/ --logpath /data/mongod_27027.log --logappend --replSet replset_1 --wiredTigerCacheSizeGB 3
+
 
 **`mdb_cgroup.yaml`**
 
@@ -97,9 +91,6 @@ This file extends mdb_cgroup.yaml and the services for each container to glue th
 
 This file contains the following definitions:
 
-**image**: Docker image for the Cloud Manager automation agent from the Docker HUB 
-
-	image: marcob/mongodb-automation:latest
     
 **environment** variables: Here we will define our filters based on the labels defined in mdb_repl.yaml
 
@@ -116,63 +107,52 @@ Affinity soft filter to avoid deploying a new container with a primary initial s
 
 Constraint filter to avoid or force the deployment of a container to a specific swarm node
 
-Cloud Manager API examples
----------
-
-The Cloud Manager API examples and scripts are available at the following repo:
-
-[https://github.com/10gen-labs/mms-api-examples/](https://github.com/10gen-labs/mms-api-examples/)
-
-During the demo, I ran a modified version of test_automation_api.py to deploy to multiple nodes that contains the following changes:
-
-Number of steps used from the original test_automation_api.py
-
-	Step("configs/api_0_clean.json",
-         "Start with empty automation config"),
-
-    Step("configs/api_1_define_versions.json",
-         "Setup desired MongoDB versions"),
-
-    Step("configs/api_2_install_other_agents.json",
-         "Install Backup and Monitoring agents"),
-
-    Step("configs/shardedCluster3.2.json",
-         "Create a Sharded Cluster"),
-
-The last step uses the automation configuration defined in [shardedCluster3.2.json] (shardedCluster3.2.json)
-
-
-First step:
-
-	python test_automation_api.py https://mms.mongodb.com HOSTNAME GROUP_ID MMS_USERNAME MMS_API_KEY --clean
-	
-Second step:
-
-	python test_automation_api.py https://mms.mongodb.com HOSTNAME GROUP_ID MMS_USERNAME MMS_API_KEY 
-	
-	
-Steps to deploy the example sharded cluster 
+Steps to a MongoDB sharded cluster with mongod processes
 -----
 Once we have a Swarm cluster deployed using Docker Machine (and after having all pre-required binaries installed), we can deploy it with the following commands:
 
 **Move to demo directory**
 
-	cd MDBW-demo
+	cd docker-MDB
 
 **Source the Docker environment variables to connect to the Swarm master**	
 
-	eval $(docker-machine env --swarm marcob-MDBW-swarm-master)
+	eval $(docker-machine env --swarm marcob-swarm-master)
+
+**Deploy all required mongod containers to our Docker swarm nodes (on AWS)**
+
 	docker-compose up -d
-
-**Move to the mms-api-examples directory**
-
-	cd mms-api-examples/automation/api_usage_example
 	
-**Clean the automation configuration for the current group**
+**Check all containers are deployed**
 
-	python test_automation_api.py https://mms.mongodb.com HOSTNAME GROUP_ID MMS_USERNAME MMS_API_KEY --clean
+	docker ps
 
-**Deploy our sharded cluster on Cloud Manager based on the
-configuration defined in shardedCluster3.2.json**
+**Configure each shard as replica set**
 
-	python test_automation_api.py https://mms.mongodb.com HOSTNAME GROUP_ID MMS_USERNAME MMS_API_KEY 
+The following script will connect to the first instance for each shard (including the config server replica set) and configure the replic set.
+
+	./replSet.sh
+
+**Configure shards for the cluster**
+
+The following script will connect to the mongos and add all three shards for the cluster.
+
+	./addShard.sh
+
+**Connect to the mongos**
+
+At this point, our sharded cluster on docker containers is deployed on the swarm and configured to be used.
+
+Connect to the mongos by getting its host IP from `docker ps` and connecting with the mongo shell:
+
+	mongo --host $mongos_host_ip 
+
+**Confirm the cluster status**
+
+Run the following command to verify the three existing shards:
+
+	sh.status()
+	
+ToDo
+----	
+- Create DAB to package and automate the deployment
