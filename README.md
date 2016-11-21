@@ -1,4 +1,4 @@
-mongo-swarm
+mongodb-swarm
 ===========
 
 Scripts and compose files to orchestrate the deployment of a MongoDB cluster running on Docker containers. The deployment is based on a Docker Swarm cluster, using docker-machine with the ec2 driver (to deploy on AWS), docker-compose (to build multi-container services) and the Docker cgroups implementation to define resource limits to each container.
@@ -12,10 +12,11 @@ This project requires the following binaries to be installed and configured in y
 * docker (version 1.0 or higher)
 * docker-compose
 * docker-machine
+* mongo shell 
 
 Additionally, to deploy to AWS ec2 instances, your ec2 command line should be already configured with usual key and token.
 
-MongoDB World Demo 
+MongoDB World Demo: Deploying a sharded cluster in a docker swarm on AWS
 -----
 
 **Asciicinema screencast**:
@@ -26,7 +27,7 @@ MongoDB World Demo
 
 The compose files used during the MongoDB World demo are available in the demo directory:
 
-[https://github.com/sisteming/mongo-swarm/tree/master/demo](https://github.com/sisteming/mongo-swarm/tree/master/demo)
+[https://github.com/sisteming/mongodb-swarm/tree/master/demo](https://github.com/sisteming/mongodb-swarm/tree/master/demo)
 
 Steps to deploy a Swarm cluster with docker-machine running on AWS ec2 instances 
 -----
@@ -116,6 +117,12 @@ Let's deploy 3 worker nodes for the cluster:
 	wait
 
 
+**Bootstrap your environment**
+
+The steps below are covered in this shell script that will set up all the above:
+
+
+
 **List all the created nodes with docker-machine:**
 
 	docker-machine ls
@@ -133,35 +140,52 @@ Let's deploy 3 worker nodes for the cluster:
 
 	docker run swarm list consul://${KV_IP}:8500
 
-Steps to deploy the MongoDB World demo sharded cluster (MDBW-demo)
+Steps to a MongoDB sharded cluster with mongod processes
 -----
 Once we have a Swarm cluster deployed using Docker Machine (and after having all pre-required binaries installed), we can deploy it with the following commands:
 
 **Move to demo directory**
 
-	cd MDBW-demo
+	cd docker-MDB
 
 **Source the Docker environment variables to connect to the Swarm master**	
 
-	eval $(docker-machine env --swarm marcob-MDBW-swarm-master)
+	eval $(docker-machine env --swarm marcob-swarm-master)
+
+**Deploy all required mongod containers to our Docker swarm nodes (on AWS)**
+
 	docker-compose up -d
-
-**Move to the mms-api-examples directory**
-
-	cd mms-api-examples/automation/api_usage_example
 	
-**Clean the automation configuration for the current group**
+**Check all containers are deployed**
 
-	python test_automation_api.py https://mms.mongodb.com HOSTNAME GROUP_ID MMS_USERNAME MMS_API_KEY --clean
+	docker ps
 
-**Deploy our sharded cluster on Cloud Manager based on the
-configuration defined in shardedCluster3.2.json**
+**Configure each shard as replica set**
 
-	python test_automation_api.py https://mms.mongodb.com HOSTNAME GROUP_ID MMS_USERNAME MMS_API_KEY 
+The following script will connect to the first instance for each shard (including the config server replica set) and configure the replic set.
 
+	./replSet.sh
 
+**Configure shards for the cluster**
+
+The following script will connect to the mongos and add all three shards for the cluster.
+
+	./addShard.sh
+
+**Connect to the mongos**
+
+At this point, our sharded cluster on docker containers is deployed on the swarm and configured to be used.
+
+Connect to the mongos by getting its host IP from `docker ps` and connecting with the mongo shell:
+
+	mongo --host $mongos_host_ip 
+
+**Confirm the cluster status**
+
+Run the following command to verify the three existing shards:
+
+	sh.status()
+	
 ToDo
------
-- Update the scripts to convert them to Docker 1.12 with integrated Swarm
-- Automate the creation of the compose files
+----	
 - Create DAB to package and automate the deployment
