@@ -19,15 +19,17 @@ Additionally, to deploy to AWS ec2 instances, your ec2 command line should be al
 MongoDB World Demo: Deploying a sharded cluster in a docker swarm on AWS
 -----
 
-**Asciicinema screencast**:
-
-[![asciicast](https://asciinema.org/a/5ve3u32kh4q65j5pl2iztjwzv.png)](https://asciinema.org/a/5ve3u32kh4q65j5pl2iztjwzv)
-
 **Demo files**
 
 The compose files used during the MongoDB World demo are available in the demo directory:
 
 [https://github.com/sisteming/mongodb-swarm/tree/master/demo](https://github.com/sisteming/mongodb-swarm/tree/master/demo)
+
+
+**Asciicinema screencast**:
+
+[![asciicast](https://asciinema.org/a/5ve3u32kh4q65j5pl2iztjwzv.png)](https://asciinema.org/a/5ve3u32kh4q65j5pl2iztjwzv)
+
 
 Steps to deploy a Swarm cluster with docker-machine running on AWS ec2 instances 
 -----
