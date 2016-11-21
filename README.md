@@ -91,12 +91,13 @@ Start a container running consul:
 **Create a first instance for the Swarm master**
 
 	docker-machine create --driver amazonec2 --amazonec2-region eu-west-1 \
-	--amazonec2-tags owner,myusername,expire-on,2016-07-15 \
+	--amazonec2-tags owner,marco.bonezzi,expire-on,2016-12-15 \
 	--amazonec2-root-size 80 --amazonec2-use-ebs-optimized-instance \
 	--amazonec2-instance-type m3.2xlarge \
 	--swarm --swarm-master --swarm-discovery="consul://${KV_IP}:8500" \
 	--engine-opt="cluster-store=consul://${KV_IP}:8500" \
-	--engine-opt="cluster-advertise=eth0:2376" marcob-MDBW-swarm-master
+	--engine-opt="cluster-advertise=eth0:2376" marcob-swarm-master
+
 
 **Connect our Docker client to the new Swarm master**
 
@@ -108,22 +109,28 @@ Start a container running consul:
 Let's deploy 3 worker nodes for the cluster:
 
 	export NUM_WORKERS=3; for i in $(seq 1 $NUM_WORKERS); do
-	    docker-machine create --driver amazonec2 --amazonec2-region eu-west-1 \
-	    --amazonec2-tags owner,myusername,expire-on,2016-07-15 \
-	    --amazonec2-root-size 80 --amazonec2-use-ebs-optimized-instance \
-	    --amazonec2-instance-type m3.2xlarge \
-	    --swarm --swarm-discovery="consul://${KV_IP}:8500" \
-	    --engine-opt="cluster-store=consul://${KV_IP}:8500" \
-	    --engine-opt="cluster-advertise=eth0:2376" marcob-MDBW-swarm-node-${i} &
-	done;	
-	wait
+     echo "Creating marcob-swarm-node-$i..."
+     docker-machine create --driver amazonec2 --amazonec2-region eu-west-1 \
+     --amazonec2-tags owner,marco.bonezzi,expire-on,2016-12-15 \
+     --amazonec2-root-size 80 --amazonec2-use-ebs-optimized-instance \
+     --amazonec2-instance-type m3.2xlarge \
+     --swarm --swarm-discovery="consul://${KV_IP}:8500" \
+     --engine-opt="cluster-store=consul://${KV_IP}:8500" \
+     --engine-opt="cluster-advertise=eth0:2376" marcob-swarm-node-${i} &
+	done;
 
 
 **Bootstrap your environment**
 
-The steps below are covered in this shell script that will set up all the above:
+The steps below are covered in [this shell script](https://github.com/sisteming/mongodb-swarm/blob/master/demo/createNodes-swarm.sh) that will set up all the above:
 
+	https://github.com/sisteming/mongodb-swarm/blob/master/demo/createNodes-swarm.sh
+	
+Running it as:
 
+	./createNodes-swarm.sh
+	
+you should get the nodes created in AWS as defined in the createNodes-swarm.sh script.
 
 **List all the created nodes with docker-machine:**
 
