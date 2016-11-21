@@ -146,7 +146,7 @@ Once we have a Swarm cluster deployed using Docker Machine (and after having all
 
 **Move to demo directory**
 
-	cd docker-MDB
+	cd demo
 
 **Source the Docker environment variables to connect to the Swarm master**	
 
