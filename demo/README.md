@@ -153,6 +153,43 @@ Run the following command to verify the three existing shards:
 
 	sh.status()
 	
+	mongo --host 52.213.243.10 --port 27017
+	MongoDB shell version v3.4.0-rc3
+	connecting to: mongodb://52.213.243.10:27017/
+	MongoDB server version: 3.4.0-rc3
+	Server has startup warnings:
+	2016-11-21T16:40:42.449+0000 I CONTROL  [main]
+	2016-11-21T16:40:42.449+0000 I CONTROL  [main] ** WARNING: Access control is not enabled for the database.
+	2016-11-21T16:40:42.449+0000 I CONTROL  [main] **          Read and write access to data and configuration is unrestricted.
+	2016-11-21T16:40:42.449+0000 I CONTROL  [main] ** WARNING: You are running this process as the root user, which is not recommended.
+	2016-11-21T16:40:42.449+0000 I CONTROL  [main]
+	MongoDB Enterprise mongos> sh.status()
+	--- Sharding Status ---
+	  sharding version: {
+		"_id" : 1,
+		"minCompatibleVersion" : 5,
+		"currentVersion" : 6,
+		"clusterId" : ObjectId("583323a772207d0861f455d9")
+	}
+	  shards:
+		{  "_id" : "replset_1",  "host" : "replset_1/rs1a:27017,rs1b:27017,rs1c:27017",  "state" : 1 }
+		{  "_id" : "replset_2",  "host" : "replset_2/rs2a:27017,rs2b:27017,rs2c:27017",  "state" : 1 }
+		{  "_id" : "replset_3",  "host" : "replset_3/rs3a:27017,rs3b:27017,rs3c:27017",  "state" : 1 }
+	  active mongoses:
+		"3.4.0-rc3" : 1
+	 autosplit:
+		Currently enabled: yes
+	  balancer:
+		Currently enabled:  yes
+		Currently running:  no
+			Balancer lock taken at Mon Nov 21 2016 16:41:11 GMT+0000 (GMT) by ConfigServer:Balancer
+		Failed balancer rounds in last 5 attempts:  5
+		Last reported error:  Cannot accept sharding commands if not started with --shardsvr
+		Time of Reported error:  Mon Nov 21 2016 19:18:49 GMT+0000 (GMT)
+		Migration Results for the last 24 hours:
+			No recent migrations
+	  databases:
+	
 ToDo
 ----	
 - Create DAB to package and automate the deployment
